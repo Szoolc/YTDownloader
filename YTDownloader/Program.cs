@@ -15,15 +15,18 @@ namespace YTDownloader
             string savePath = args[1];
             string title = args[2];
 
+            IDIContainer container = new DIContainer();
+            container.Setup();
+
             Console.WriteLine("START");
             var t1 = Task.Run(() =>
             {
-                Runner runner = new Runner();
+                Runner runner = new Runner(container.GetInstance<IDownloader>());
                 runner.Run(downloadUri, savePath, title);
             });
             var t2 = Task.Run(() =>
             {
-                Runner runner = new Runner();
+                Runner runner = new Runner(container.GetInstance<IDownloader>());
                 runner.Run(downloadUri, savePath, title + "1");
             });
             Task.WaitAll(new[] { t1, t2 });
@@ -35,15 +38,17 @@ namespace YTDownloader
 
     public class Runner
     {
+        private IDownloader _downloader;
+
+        public Runner(IDownloader downloader)
+        {
+            _downloader = downloader;
+        }
+
         public void Run(string uri, string savePath, string title)
         {
-            IDIContainer container = new DIContainer();
-            container.Setup();
-
-            IDownloader downloader = container.GetInstance<IDownloader>();
-            downloader.Setup(Resolution.HD, Extensions.MP4, uri, savePath, title);
-
-            downloader.DownloadVideo();
+            _downloader.Setup(Resolution.HD, Extensions.MP4, uri, savePath, title);
+            _downloader.DownloadVideo();
         }
     }
 }
